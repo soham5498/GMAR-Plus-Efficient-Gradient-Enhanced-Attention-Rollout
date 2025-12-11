@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![GMAR++ Architecture](./images/gmar_architecture.png)
+![GMAR++ Architecture](./images/referenec_images/architeture.jpeg)
 
 **A cutting-edge explainability framework for Vision Transformers using gradient-enhanced attention mechanisms**
 
