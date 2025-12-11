@@ -44,20 +44,6 @@ class ExplainabilityEngine:
         std (tuple): Image normalization std values for denormalization
         metrics_computer (ImageMetricsComputer): Computes metrics for images
 
-    Design Pattern:
-        Facade Pattern - Simplifies complex subsystem interactions by providing
-        a single unified interface for model initialization, dataset processing,
-        and results management.
-
-    Example:
-        >>> engine = ExplainabilityEngine(model_name="checkpoints/vit_large/best/")
-        >>> methods = engine.get_available_methods()
-        >>> summary = engine.process_dataset(
-        ...     dataset_tag="local",
-        ...     image_files=image_paths,
-        ...     method="gmar",
-        ...     mask_dir=Path("./masks")
-        ... )
     """
 
     def __init__(self, model_name: str, results_root: Path = Path("./results")):
@@ -76,17 +62,6 @@ class ExplainabilityEngine:
                 Subdirectories will be created automatically. Default is "./results"
                 relative to current working directory.
 
-        Raises:
-            FileNotFoundError: If the model checkpoint path doesn't exist
-            ValueError: If model configuration is malformed
-            RuntimeError: If model loading fails
-
-        Example:
-            >>> from pathlib import Path
-            >>> engine = ExplainabilityEngine(
-            ...     model_name="checkpoints/vit_large_tinyimagenet/best/",
-            ...     results_root=Path("./results")
-            ... )
         """
         try:
             # Validate model path
@@ -151,11 +126,6 @@ class ExplainabilityEngine:
         Returns:
             List[str]: List of method names, e.g., ["legrad", "gmar", "rollout", "gmarv2"]
 
-        Example:
-            >>> engine = ExplainabilityEngine(model_name="checkpoints/vit_large/best/")
-            >>> methods = engine.get_available_methods()
-            >>> print(methods)
-            ['legrad', 'gmar', 'rollout', 'gmarv2']
         """
         return ExplainerFactory.available_methods()
 
@@ -212,23 +182,6 @@ class ExplainabilityEngine:
                 - Counts: total images, overlays saved, masked images
                 - Dataset/method tags for tracking
 
-        Raises:
-            ValueError: If method name is not in available_methods()
-            FileNotFoundError: If image files don't exist
-
-        Example:
-            >>> from pathlib import Path
-            >>> engine = ExplainabilityEngine(model_name="checkpoints/vit_large/best/")
-            >>> images = list(Path("./images").glob("*.jpg"))
-            >>> summary = engine.process_dataset(
-            ...     dataset_tag="my_dataset",
-            ...     image_files=images,
-            ...     method="gmar",
-            ...     mask_dir=Path("./masks"),
-            ...     overlay_limit=10
-            ... )
-            >>> print(f"Processed {summary.num_images} images")
-            >>> print(f"Mean Insertion AUC: {summary.mean_insertion_auc:.3f}")
         """
         # Validate inputs
         if not image_files:

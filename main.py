@@ -8,7 +8,6 @@ dataset processing, and result aggregation.
 
 import traceback
 from pathlib import Path
-
 from src.managers import DatasetManager
 from src.engine import ExplainabilityEngine
 from src.explainers import ExplainerFactory
@@ -35,7 +34,6 @@ def main():
     fails, processing continues with local dataset results only.
     """
     try:
-        # Step 1: Get available methods and prompt user
         try:
             available_methods = ExplainerFactory.available_methods()
             if not available_methods:
@@ -45,7 +43,6 @@ def main():
             print(f"[ERROR] Failed to retrieve available methods: {e}")
             return
         
-        # Step 2: Get user input with validation
         try:
             choice = input(f"Which method? ({methods_str}): ").strip().lower()
             if not choice:
@@ -61,7 +58,6 @@ def main():
             print(f"[ERROR] Invalid input: {e}")
             return
 
-        # Step 3: Initialize ExplainabilityEngine
         try:
             model_path = "checkpoints/vit_large_tinyimagenet/best/"
             if not Path(model_path).exists():
@@ -83,7 +79,6 @@ def main():
             print(f"[ERROR] Unexpected error during engine initialization: {type(e).__name__}: {e}")
             return
 
-        # Step 4: Process local dataset
         image_dir = Path("./images")
         mask_dir = Path("./masks")
         local_summary = None
@@ -119,7 +114,6 @@ def main():
             print(f"[ERROR] Unexpected error in local dataset processing: {type(e).__name__}: {e}")
             local_summary = {}
 
-        # Step 5: Process TinyImageNet test set
         tiny_summary = {}
         if kagglehub is None:
             print("[WARN] kagglehub not available; skipping tiny test dataset.")
@@ -176,7 +170,6 @@ def main():
                 print(f"[WARN] Failed to process Tiny-ImageNet test: {type(e).__name__}: {e}")
                 tiny_summary = {}
 
-        # Step 6: Print final recap
         try:
             print("\n================ Final Recap ================ ")
             if local_summary:

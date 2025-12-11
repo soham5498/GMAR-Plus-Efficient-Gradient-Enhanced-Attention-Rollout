@@ -7,7 +7,6 @@ explanations in transformer vision models (e.g., ViT).
 
 from pathlib import Path
 from typing import List, Union
-
 import numpy as np
 import torch
 from PIL import Image

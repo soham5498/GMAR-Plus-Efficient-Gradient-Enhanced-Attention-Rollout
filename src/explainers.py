@@ -337,8 +337,6 @@ class ExplainerFactory:
             **kwargs: Keyword arguments passed to strategy constructor
 
         Returns: xplainerStrategy: Instantiated strategy object
-
-        Raises: ValueError: If choice is not a registered strategy method
         """
         if choice not in cls._strategies:
             raise ValueError(

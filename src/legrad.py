@@ -9,7 +9,6 @@ visual heatmap overlays for interpretability.
 
 from pathlib import Path
 from typing import List, Union
-
 import numpy as np
 import torch
 import torch.nn.functional as F

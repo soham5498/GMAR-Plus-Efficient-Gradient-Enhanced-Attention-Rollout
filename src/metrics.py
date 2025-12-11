@@ -6,7 +6,6 @@ pixel accuracy, IoU, and average precision.
 """
 
 from typing import Union
-
 import torch
 from sklearn.metrics import average_precision_score
 

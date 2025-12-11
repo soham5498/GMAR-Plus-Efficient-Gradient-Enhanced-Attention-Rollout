@@ -8,7 +8,6 @@ Gain, Insertion AUC, and Deletion AUC.
 """
 
 from typing import Tuple
-
 import torch
 import torch.nn.functional as F
 from torchvision.transforms.functional import gaussian_blur
@@ -21,7 +20,7 @@ __all__ = [
     "deletion_auc",
 ]
 
-DEVICE = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def _normalize_heatmap(hm: torch.Tensor) -> torch.Tensor:
     """Normalize heatmap to shape (1,1,H,W) with values in [0,1]."""

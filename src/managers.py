@@ -7,11 +7,9 @@ file operations, and organizing output directory structures.
 
 from pathlib import Path
 from typing import List
-
 import torch
 from PIL import Image
 import numpy as np
-
 from src.data_models import ImageMetrics, DatasetSummary
 from src.metrics import compute_pixel_accuracy, compute_iou, compute_ap
 from src.metrics_fidelity import average_drop_increase, insertion_auc, deletion_auc, average_gain

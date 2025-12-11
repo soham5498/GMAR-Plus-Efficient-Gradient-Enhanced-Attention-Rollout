@@ -7,7 +7,6 @@ average attention matrices across all transformer layers.
 
 from pathlib import Path
 from typing import List, Union
-
 import numpy as np
 import torch
 from PIL import Image
@@ -102,12 +101,9 @@ class AttentionRollout:
 
         Parameters
         ----------
-        cls_map
-            Heatmap tensor of shape [H, W].
-        original_image
-            Original input image (PIL.Image).
-        original_image_path
-            Path to the original image file.
+        cls_map: Heatmap tensor of shape [H, W].
+        original_image: Original input image (PIL.Image).
+        original_image_path: Path to the original image file.
 
         Returns
         -------

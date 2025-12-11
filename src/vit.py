@@ -33,7 +33,7 @@ class CustomViT:
     ----------
     model_name : str, optional
         Path to fine-tuned checkpoint directory or HF hub ID
-        (default: "/home/jovyan/ViT-L_finetuned/checkpoints/vit_large_tinyimagenet/best").
+        (default: "checkpoints/vit_large_tinyimagenet/best/").
     device : str, optional
         Compute device ('cuda', 'cpu', etc.); auto-selected if None.
     ensure_size : Tuple[int, int], optional
@@ -42,31 +42,20 @@ class CustomViT:
 
     def __init__(
         self,
-        model_name: str = "/home/jovyan/ViT-L_finetuned/checkpoints/vit_large_tinyimagenet/best",
+        model_name: str = "checkpoints/vit_large_tinyimagenet/best/",
         device: Optional[str] = None,
         ensure_size: Tuple[int, int] = (224, 224),
     ) -> None:
-        """
-        Args:
-            model_name: path to your fine-tuned checkpoint directory OR HF hub id.
-            device: 'cuda', 'cpu', or None -> auto
-            ensure_size: (H, W) the working size (Tiny-ImageNet gets resized anyway)
-        """
-        self.device = device or ("cuda:1" if torch.cuda.is_available() else "cpu")
-
-        # ---- Load model from checkpoint (or hub) ----
-        # This will pick up config.json, model.safetensors, id2label.json, etc.
+        """Initialize CustomViT with model and processor."""
+        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.model = ViTForImageClassification.from_pretrained(model_name).to(self.device)
         self.model.eval()
 
-        # ---- Try to load a processor from the same dir; fallback to base, then patch mean/std if available ----
         try:
             self.processor = ViTImageProcessor.from_pretrained(model_name, local_files_only=True)
         except Exception:
-            # Fallback to base ViT-L processor; we’ll patch mean/std from preproc.json if present
             self.processor = ViTImageProcessor.from_pretrained("google/vit-large-patch16-224")
 
-        # Honor saved preproc stats if present
         preproc_path = Path(model_name) / "preproc.json"
         if preproc_path.exists():
             try:
@@ -76,25 +65,19 @@ class CustomViT:
             except Exception:
                 pass
 
-        # Make sure we resize to the working size (ViT expects 224x224 by default)
-        # If your processor already contains a size, this will just ensure it's correct.
+        
         if ensure_size is not None:
             H, W = ensure_size
-            # older processors use dicts like {"height": 224, "width": 224}; newer may have .size or .crop_size
             try:
                 self.processor.size = {"height": H, "width": W}
             except Exception:
                 pass
 
-        # ---- Class names from checkpoint ----
-        # config.id2label keys might be str or int; normalize to a list by index
         cfg = self.model.config
         id2label = cfg.id2label or {}
-        # Coerce keys to int and build an ordered list 0..num_labels-1
         try:
             tmp = {int(k): v for k, v in id2label.items()}
         except Exception:
-            # If keys are already ints
             tmp = id2label
         self.imagenet_classes = [tmp[i] for i in range(cfg.num_labels)]
 
@@ -133,20 +116,16 @@ class CustomViT:
             (logits, predicted_class_idx, class_name, per_layer_attention_matrices)
         """
         attn_weights: List[torch.Tensor] = []
-
-        # Patch embeddings + CLS token
         x = self.model.vit.embeddings.patch_embeddings(img_tensor)
         cls_token = self.model.vit.embeddings.cls_token.expand(x.shape[0], -1, -1)
         x = torch.cat((cls_token, x), dim=1)
         x = x + self.model.vit.embeddings.position_embeddings
         x = self.model.vit.embeddings.dropout(x)
 
-        # Encoder blocks with manual attention
         for blk in self.model.vit.encoder.layer:
             B, N, C = x.shape
             norm_x = blk.layernorm_before(x)
 
-            # Q/K/V projections
             q = blk.attention.attention.query(norm_x)
             k = blk.attention.attention.key(norm_x)
             v = blk.attention.attention.value(norm_x)
@@ -167,7 +146,6 @@ class CustomViT:
             attn_out = blk.attention.output.dense(context)
             x = x + attn_out
 
-            # MLP block
             mlp_in = blk.layernorm_after(x)
             mlp_hidden = blk.intermediate.dense(mlp_in)
             mlp_hidden = torch.nn.functional.gelu(mlp_hidden)
@@ -176,7 +154,6 @@ class CustomViT:
 
             attn_weights.append(attn)
 
-        # Classification
         x = self.model.vit.layernorm(x)
         cls_embedding = x[:, 0]
         logits = self.model.classifier(cls_embedding)
